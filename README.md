@@ -24,7 +24,7 @@ The Estate Management System is a web application designed for managing apartmen
 
 ## API Documentation
 
-API documentation is available at [http://localhost:3000/api-docs](http://localhost:3000/api-docs) and is generated using Swagger. Ensure that the Swagger setup is correctly pointing to your API routes.
+API documentation is available at [http://localhost:3000/swagger](http://localhost:3000/swagger) and is generated using Swagger. Ensure that the Swagger setup is correctly pointing to your API routes.
 
 ## API Routes
 

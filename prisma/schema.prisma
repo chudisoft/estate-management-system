@@ -22,7 +22,7 @@ model User {
   middleName     String?
   lastName       String
   username       String    @unique
-  role           String
+  role      String   @default("user")
   phone          String
   password       String
   contactAddress String

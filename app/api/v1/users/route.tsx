@@ -1,6 +1,8 @@
-// app/api/users/route.tsx
 import { PrismaClient, User } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
+import { authenticate } from '../auth/auth';
+import { hashPassword } from '@/utils/auth';
+import { error } from 'console';
 
 const prisma = new PrismaClient();
 
@@ -69,19 +71,44 @@ const prisma = new PrismaClient();
  */
 
 export async function GET(request: NextRequest) {
+  const token = await authenticate(request);
+  if (token !== null) return token;
+  
   const users = await prisma.user.findMany();
   return NextResponse.json(users);
 }
 
 export async function POST(request: NextRequest) {
+  const token = await authenticate(request);
+  if (token !== null) return token;
+  
   const data = await request.json();
-  const newUser = await prisma.user.create({
-    data,
-  });
-  return NextResponse.json(newUser, { status: 201 });
+
+  if (!data.email || !data.password) {
+    return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+  }
+
+  try {
+    data.role = data.role || 'user'; // Assign role
+    data.password = await hashPassword(data.password); // Implement hashPassword function
+
+    const newUser = await prisma.user.create({
+      data,
+    });
+    return NextResponse.json({ user: newUser, message: 'User registered successfully' }, { status: 201 });
+
+  } catch (error) {
+    console.log(error);
+    
+    return NextResponse.json({ error: 'Error registering user' }, { status: 500 });
+  }
+
 }
 
 export async function PUT(request: NextRequest) {
+  const token = await authenticate(request);
+  if (token !== null) return token;
+  
   const { id, ...data } = await request.json();
   const updatedUser = await prisma.user.update({
     where: { id },
@@ -91,8 +118,11 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const token = await authenticate(request);
+  if (token !== null) return token;
+  
   const { searchParams } = new URL(request.url);
-  const id = parseInt(searchParams.get('id') || '');
+  const id = searchParams.get('id') || '';
   const deletedUser = await prisma.user.delete({
     where: { id },
   });

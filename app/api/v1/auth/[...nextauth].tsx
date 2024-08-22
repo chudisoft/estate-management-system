@@ -1,7 +1,9 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import { prisma } from '../../../lib/prisma'; // Adjust the path to your Prisma instance
+import { PrismaClient, Building } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export default NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -16,9 +18,20 @@ export default NextAuth({
     strategy: 'jwt', // or 'database' if you are using a database to store sessions
   },
   callbacks: {
-    async session({ session, user }) {
-      session.user.id = user.id;
+    async session({ session, token, user }) {
+      // Add role to session
+      if (session.user) {
+        session.user.role = user.role;
+      }
       return session;
     },
+    async jwt({ token, user }) {
+      // Persist the user's role in the token right after sign in
+      if (user) {
+        token.role = user.role;
+      }
+      return token;
+    },
   },
+  secret: process.env.NEXTAUTH_SECRET,
 });

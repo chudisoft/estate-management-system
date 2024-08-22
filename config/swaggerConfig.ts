@@ -10,6 +10,15 @@ export const swaggerDefinition = {
         url: 'http://localhost:3000/api/v1',
       },
     ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
   };
   
   export const options = {

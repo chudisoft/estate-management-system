@@ -1,6 +1,6 @@
-// app/api/rent/route.tsx
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient, Rent } from '@prisma/client';
+import { authenticate } from '../auth/auth';
 
 const prisma = new PrismaClient();
 
@@ -80,11 +80,17 @@ const prisma = new PrismaClient();
  */
 
 export async function GET(request: NextRequest) {
+  const token = await authenticate(request);
+  if (token !== null) return token;
+  
   const rents = await prisma.rent.findMany();
   return NextResponse.json(rents);
 }
 
 export async function POST(request: NextRequest) {
+  const token = await authenticate(request);
+  if (token !== null) return token;
+  
   const data = await request.json();
   const newRent = await prisma.rent.create({
     data,
@@ -93,6 +99,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const token = await authenticate(request);
+  if (token !== null) return token;
+  
   const { id, ...data } = await request.json();
   const updatedRent = await prisma.rent.update({
     where: { id },
@@ -102,6 +111,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const token = await authenticate(request);
+  if (token !== null) return token;
+  
   const { searchParams } = new URL(request.url);
   const id = parseInt(searchParams.get('id') || '');
   const deletedRent = await prisma.rent.delete({

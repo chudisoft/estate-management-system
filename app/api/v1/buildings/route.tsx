@@ -1,6 +1,6 @@
-// app/api/buildings/route.tsx
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient, Building } from '@prisma/client';
+import { authenticate } from '../auth/auth';
 
 const prisma = new PrismaClient();
 
@@ -69,11 +69,17 @@ const prisma = new PrismaClient();
  */
 
 export async function GET(request: NextRequest) {
+  const token = await authenticate(request);
+  if (token !== null) return token;
+  
   const buildings = await prisma.building.findMany();
   return NextResponse.json(buildings);
 }
 
 export async function POST(request: NextRequest) {
+  const token = await authenticate(request);
+  if (token !== null) return token;
+  
   const data = await request.json();
   const newBuilding = await prisma.building.create({
     data,
@@ -82,6 +88,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const token = await authenticate(request);
+  if (token !== null) return token;
+  
   const { id, ...data } = await request.json();
   const updatedBuilding = await prisma.building.update({
     where: { id },
@@ -91,6 +100,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const token = await authenticate(request);
+  if (token !== null) return token;
+  
   const { searchParams } = new URL(request.url);
   const id = parseInt(searchParams.get('id') || '');
   const deletedBuilding = await prisma.building.delete({

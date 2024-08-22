@@ -1,6 +1,6 @@
-// app/api/expenses/route.tsx
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient, Expense } from '@prisma/client';
+import { authenticate } from '../auth/auth';
 
 const prisma = new PrismaClient();
 
@@ -71,11 +71,17 @@ const prisma = new PrismaClient();
  */
 
 export async function GET(request: NextRequest) {
+  const token = await authenticate(request);
+  if (token !== null) return token;
+  
   const expenses = await prisma.expense.findMany();
   return NextResponse.json(expenses);
 }
 
 export async function POST(request: NextRequest) {
+  const token = await authenticate(request);
+  if (token !== null) return token;
+  
   const data = await request.json();
   const newExpense = await prisma.expense.create({
     data,
@@ -84,6 +90,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const token = await authenticate(request);
+  if (token !== null) return token;
+  
   const { id, ...data } = await request.json();
   const updatedExpense = await prisma.expense.update({
     where: { id },
@@ -93,6 +102,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const token = await authenticate(request);
+  if (token !== null) return token;
+  
   const { searchParams } = new URL(request.url);
   const id = parseInt(searchParams.get('id') || '');
   const deletedExpense = await prisma.expense.delete({
