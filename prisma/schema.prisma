@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // or "postgresql", "mysql" etc.
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    String   @id @default(cuid())
+  email String   @unique
+  name  String?
+  image String?
+  firstName      String
+  middleName     String?
+  lastName       String
+  username       String    @unique
+  role           String
+  phone          String
+  password       String
+  contactAddress String
+  state          String
+  lga            String
+  country        String
+  height         Float?
+  dateOfBirth    DateTime?
+  occupation     String?
+  lastLogin      DateTime?
+  apartments     Apartment[]  // Relation to Apartment model
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  Rents          Rent[]
+  Payments       Payment[]
+}
+
+model Building {
+  id          Int         @id @default(autoincrement())
+  name        String
+  address     String
+  numOfFloors Int
+  apartments  Apartment[]
+  expenses    Expense[]   // Relation to Expense model
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Apartment {
+  id          Int        @id @default(autoincrement())
+  name        String
+  cost        Float
+  costBy      String
+  address     String
+  buildingId  Int
+  building    Building   @relation(fields: [buildingId], references: [id])
+  tenants     User[]     // Implicit many-to-many relation with User model
+  expenses    Expense[]  // Relation to Expense model
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  Rents       Rent[]
+}
+
+model Rent {
+  id          Int        @id @default(autoincrement())
+  apartmentId Int
+  apartment   Apartment  @relation(fields: [apartmentId], references: [id])
+  tenantId    String
+  tenant      User       @relation(fields: [tenantId], references: [id])
+  startDate   DateTime
+  endDate     DateTime
+  totalAmount Float
+  payments    Payment[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Payment {
+  id          Int        @id @default(autoincrement())
+  rentId      Int
+  rent        Rent       @relation(fields: [rentId], references: [id])
+  tenantId    String
+  tenant      User       @relation(fields: [tenantId], references: [id])
+  amountPaid  Float
+  paymentId   String
+  accountPaidTo String
+  paymentDate DateTime
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Expense {
+  id          Int        @id @default(autoincrement())
+  description String
+  amount      Float
+  category    String
+  apartmentId Int?
+  apartment   Apartment? @relation(fields: [apartmentId], references: [id])
+  buildingId  Int?
+  building    Building?  @relation(fields: [buildingId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
