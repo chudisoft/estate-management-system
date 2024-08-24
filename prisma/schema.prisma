@@ -32,6 +32,11 @@ model User {
   height         Float?
   dateOfBirth    DateTime?
   occupation     String?
+  aboutMe        String?
+  socialMediaHandles SocialMediaHandles?
+  ipAddress     String?
+  gps     String?
+  deviceInfo     String?
   lastLogin      DateTime?
   apartments     Apartment[]  // Relation to Apartment model
   createdAt      DateTime  @default(now())

@@ -89,12 +89,28 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    data.role = data.role || 'user'; // Assign role
-    data.password = await hashPassword(data.password); // Implement hashPassword function
+    // Extract device information from the User-Agent header
+    const userAgent = request.headers.get('user-agent') || 'unknown'; // Get the User-Agent header
+    const deviceInfo = userAgent; // For simplicity, just using the User-Agent string as device info
 
+    // Extracting IP address and GPS from the request or data
+    const ipAddress = request.headers.get('x-forwarded-for') || ''; // Example: You might get it from headers
+    const gps = data.gps || ''; // Example: GPS data might come from the request
+
+    // Setting default values if they are not provided
+    data.role = data.role || 'user'; // Assign role
+    data.password = await hashPassword(data.password); // Hashing the password
+
+    // Creating a new user with additional fields
     const newUser = await prisma.user.create({
-      data,
+      data: {
+        ...data,
+        ipAddress,
+        gps,
+        deviceInfo,
+      }
     });
+
     return NextResponse.json({ user: newUser, message: 'User registered successfully' }, { status: 201 });
 
   } catch (error) {
