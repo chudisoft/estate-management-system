@@ -30,6 +30,8 @@ const LoginPage = () => {
     const data = await res.json();
 
     if (res.ok) {
+      // Cache the token in local storage
+      localStorage.setItem('token', data.token);
       router.push('/dashboard'); // Redirect to a protected page
     } else {
       setError(data.error || 'An error occurred');
