@@ -2,7 +2,7 @@ import { LawFirm } from '@prisma/client';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-export const fetchLawFirms = createAsyncThunk<LawFirm[]>('lawfirm/fetchLawFirms', async () => {
+export const fetchLawFirms = createAsyncThunk('lawfirm/fetchLawFirms', async () => {
   const response = await axios.get('/api/v1/lawfirms');
   return response.data;
 });
@@ -28,6 +28,11 @@ export const updateLawFirm = createAsyncThunk<LawFirm, LawFirm>(
     return response.data;
   }
 );
+
+export const deleteLawFirm = createAsyncThunk<string, string>('lawfirm/deleteLawFirm', async (id: string) => {
+  await axios.delete(`/api/v1/lawfirms/${id}`);
+  return id;
+});
 
 interface LawFirmState {
   lawfirms: LawFirm[];
@@ -59,6 +64,10 @@ const lawfirmSlice = createSlice({
       .addCase(fetchLawFirms.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message || null; // Handle error message
+      })
+      .addCase(deleteLawFirm.fulfilled, (state, action) => {
+        state.lawfirms = state.lawfirms.filter((firm) => firm.id !== Number(action.payload));
+        state.status = 'succeeded';
       });
   },
 });

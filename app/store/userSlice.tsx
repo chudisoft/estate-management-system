@@ -32,6 +32,7 @@ export const updateUser = createAsyncThunk<User, User>(
 interface UserState {
   users: User[];
   managers: User[];
+  tenants: User[];
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
 }
@@ -39,6 +40,7 @@ interface UserState {
 const initialState: UserState = {
   users: [],
   managers: [],
+  tenants: [],
   status: 'idle',
   error: null,
 };
@@ -56,7 +58,8 @@ const userSlice = createSlice({
       .addCase(fetchUsers.fulfilled, (state, action) => {
         const allUsers = action.payload;
         state.users = allUsers;
-        state.managers = allUsers.filter(user => user.role === 'manager');
+        state.managers = allUsers.filter(user => user.role === 'Manager');
+        state.tenants = allUsers.filter(user => user.role === 'Tenent');
         state.status = 'succeeded';
       })
       .addCase(fetchUsers.rejected, (state, action) => {

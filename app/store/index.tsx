@@ -6,6 +6,7 @@ import buildingReducer from './buildingSlice';
 import apartmentReducer from './apartmentSlice';
 import lawfirmReducer from './lawfirmSlice';
 import paymentReducer from './paymentSlice';
+import bookingStatusReducer from './bookingStatusSlice';
 
 const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ const store = configureStore({
     apartments: apartmentReducer,
     lawfirms: lawfirmReducer,
     payments: paymentReducer,
+    bookingStatuses: bookingStatusReducer,
   },
 });
 
