@@ -1,151 +1,126 @@
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchBuilding, createBuilding, updateBuilding } from '../../store/buildingSlice';
-import { fetchUsers } from '../../store/userSlice';
-import { fetchLawFirms } from '../../store/lawfirmSlice';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBuilding, faLocationDot } from '@fortawesome/free-solid-svg-icons';
-import { AppDispatch, RootState } from '../../store/index';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchBuildings } from '../../store/buildingSlice'; // Ensure you have this slice
+import { AppDispatch, RootState } from '../../store';
+import BuildingCard from './BuildingCard'; // Ensure you have this component
+import Pagination from '../../Pagination';
+import { saveAs } from 'file-saver';
+import { CSVLink } from 'react-csv';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { Building } from '@prisma/client';
 
-interface BuildingFormProps {
-  buildingId?: number; // Optional ID for editing
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
 }
 
-const BuildingForm: React.FC<BuildingFormProps> = ({ buildingId }) => {
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
-  const [lawFirmId, setLawFirmId] = useState<number | null>(null);
-  const [managerId, setManagerId] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  // const lawFirms = useSelector(fetchLawFirms);
-  // const users = useSelector(fetchUsers);
+const BuildingList: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
-  const router = useRouter();
-
-  const lawFirms = useSelector((state: RootState) => state.lawfirms.lawfirms);
-  const users = useSelector((state: RootState) => state.users.managers);
+  const { buildings, status, error } = useSelector((state: RootState) => state.buildings);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
-    dispatch(fetchLawFirms());
-    dispatch(fetchUsers());
+    dispatch(fetchBuildings());
+  }, [dispatch]);
 
-    if (buildingId) {
-      // Fetch building details for editing
-      fetch(`/api/v1/buildings/${buildingId}`)
-        .then((res) => res.json())
-        .then((data) => {
-          setName(data.name);
-          setAddress(data.address);
-          setLawFirmId(data.lawFirmId);
-          setManagerId(data.managerId);
-        })
-        .catch((error) => setError('Failed to load building details'));
-    }
-  }, [buildingId, dispatch]);
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSort = (column: keyof typeof buildings[0]) => {
+    const order = sortOrder === 'asc' ? 'desc' : 'asc';
+    setSortOrder(order);
+    // Sort logic based on column and order
+  };
 
-    const buildingData = { name, address, lawFirmId, managerId };
+  const filteredBuildings = buildings
+    .filter((building: Building) => building.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) =>
+      sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+    );
 
-    const url = buildingId ? `/api/v1/buildings/${buildingId}` : '/api/v1/buildings';
-    const method = buildingId ? 'PUT' : 'POST';
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentBuildings = filteredBuildings.slice(indexOfFirstItem, indexOfLastItem);
 
-    const res = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(buildingData),
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.autoTable({
+      head: [['Name', 'Address', 'Number of Floors']],
+      body: buildings.map((building: Building) => [building.name, building.address, building.numberOfFloors]),
     });
+    doc.save('buildings.pdf');
+  };
 
-    if (res.ok) {
-      router.push('/buildings');
-    } else {
-      const data = await res.json();
-      setError(data.error || 'Failed to save building');
-    }
+  const exportToExcel = () => {
+    const csvData = buildings.map((building: Building) => ({
+      Name: building.name,
+      Address: building.address,
+      'Number of Floors': building.numberOfFloors,
+    }));
+  
+    const csvRows = [
+      Object.keys(csvData[0]).join(','), // headers
+      ...csvData.map(row => Object.values(row).join(',')) // rows
+    ];
+  
+    const csvBlob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    saveAs(csvBlob, 'buildings.csv');
+  };
+
+  const onEdit = (id: number) => {
+    // Handle edit logic
+  };
+
+  const onDelete = (id: number) => {
+    // Handle delete logic
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="w-full max-w-md p-8 bg-gray-100 text-gray-700 shadow-md rounded-lg">
-        <h1 className="text-2xl font-bold mb-4">{buildingId ? 'Edit Building' : 'Add Building'}</h1>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4 relative">
-            <label htmlFor="name" className="block text-gray-700">Building Name</label>
-            <div className="flex items-center">
-              <FontAwesomeIcon icon={faBuilding} className="absolute ml-2 text-gray-400" />
-              <input
-                type="text"
-                id="name"
-                className="mt-1 p-2 pl-10 border border-gray-300 rounded w-full"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-          <div className="mb-4 relative">
-            <label htmlFor="address" className="block text-gray-700">Address</label>
-            <div className="flex items-center">
-              <FontAwesomeIcon icon={faLocationDot} className="absolute ml-2 text-gray-400" />
-              <input
-                type="text"
-                id="address"
-                className="mt-1 p-2 pl-10 border border-gray-300 rounded w-full"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-          <div className="mb-4">
-            <label htmlFor="lawFirm" className="block text-gray-700">Law Firm</label>
-            <select
-              id="lawFirm"
-              className="mt-1 p-2 border border-gray-300 rounded w-full"
-              value={lawFirmId ?? ''}
-              onChange={(e) => setLawFirmId(Number(e.target.value))}
-              required
-            >
-              <option value="" disabled>Select Law Firm</option>
-              {lawFirms.map((firm) => (
-                <option key={firm.id} value={firm.id}>
-                  {firm.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="mb-4">
-            <label htmlFor="manager" className="block text-gray-700">Manager</label>
-            <div className="carousel flex space-x-2 overflow-x-scroll p-2 border border-gray-300 rounded">
-              {users.map((user) => (
-                <div
-                  key={user.id}
-                  onClick={() => setManagerId(user.id)}
-                  className={`cursor-pointer p-2 rounded ${
-                    managerId === user.id ? 'bg-blue-200' : 'bg-white'
-                  }`}
-                >
-                  <img src={user.image?.toString()} alt={user.name?.toString()} className="w-16 h-16 rounded-full" />
-                  <p className="text-center">{user.name}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
-          >
-            {buildingId ? 'Update Building' : 'Add Building'}
+    <div className="container mx-auto px-4">
+      <div className="flex justify-between items-center mb-4">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchTerm}
+          onChange={handleSearch}
+          className="p-2 border rounded"
+        />
+        <div className="flex space-x-2">
+          <CSVLink data={buildings} filename={'buildings.csv'} className="btn btn-primary">
+            Export to CSV
+          </CSVLink>
+          <button onClick={exportToPDF} className="btn btn-primary">
+            Export to PDF
           </button>
-        </form>
+          <button onClick={exportToExcel} className="btn btn-primary">
+            Export to Excel
+          </button>
+        </div>
       </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {currentBuildings.map((building: Building) => (
+          <BuildingCard
+            key={building.id}
+            building={building}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        ))}
+      </div>
+      <Pagination
+        itemsPerPage={itemsPerPage}
+        totalItems={filteredBuildings.length}
+        currentPage={currentPage}
+        paginate={(pageNumber: number) => setCurrentPage(pageNumber)}
+      />
     </div>
   );
 };
 
-export default BuildingForm;
+export default BuildingList;

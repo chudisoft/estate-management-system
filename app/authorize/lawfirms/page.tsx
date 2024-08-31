@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchLawFirms } from '../../store/lawfirmSlice';
-import { RootState } from '../../store';
+import { AppDispatch, RootState } from '../../store';
 import LawFirmCard from './LawFirmCard';
 import Pagination from '../../Pagination';
 import { saveAs } from 'file-saver';
@@ -17,7 +17,7 @@ declare module 'jspdf' {
 }
 
 const LawFirmList: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch: AppDispatch = useDispatch();
   const { lawfirms, status, error } = useSelector((state: RootState) => state.lawfirms);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);

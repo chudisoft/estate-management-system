@@ -22,7 +22,6 @@ model SocialMediaHandles {
   whatsapp String?
   owner     User?
 }
-
 model User {
   id                 String      @id @default(cuid())
   email              String      @unique
@@ -32,7 +31,7 @@ model User {
   middleName         String?
   lastName           String
   username           String      @unique
-  role               String      @default("guest")  //Manager,Tenent,Guest,Admin,Staff,Cashier
+  role               String      @default("guest")  // Manager, Tenant, Guest, Admin, Staff, Cashier
   phone              String
   password           String
   contactAddress     String
@@ -51,7 +50,8 @@ model User {
   lastLogin          DateTime?
   apartments         Apartment[]  // Relation to Apartment model
   managedHouses      Building[]  @relation("ManagerHouses")
-  bookings    GuestBooking[]
+  bookings           GuestBooking[]
+  active             Boolean     @default(true)
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
   Rents              Rent[]
@@ -61,17 +61,18 @@ model User {
 model Building {
   id          Int        @id @default(autoincrement())
   name        String
-  estate     String?
+  estate      String?
   address     String
   numOfFloors Int
   apartments  Apartment[]
   expenses    Expense[]   // Relation to Expense model
   buildingFeature    BuildingFeature[]
-  utility    Utility[]
+  utility     Utility[]
   managerId   String?
   manager     User?       @relation("ManagerHouses", fields: [managerId], references: [id])
   lawFirmId   Int?
   lawFirm     LawFirm?    @relation(fields: [lawFirmId], references: [id])
+  active      Boolean     @default(true)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
@@ -83,6 +84,7 @@ model LawFirm {
   phone     String
   email     String
   buildings Building[]  // Relation to Building model
+  active    Boolean     @default(true)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 }
@@ -93,11 +95,14 @@ model Apartment {
   cost              Float
   costBy            String
   address           String
+  numberOfRooms     Int
+  numberOfPalours   Int
   buildingId        Int
   building          Building           @relation(fields: [buildingId], references: [id])
   tenants           User[]             // Implicit many-to-many relation with User model
   expenses          Expense[]          // Relation to Expense model
-  bookings    GuestBooking[]
+  bookings          GuestBooking[]
+  active            Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   rents             Rent[]
@@ -118,6 +123,7 @@ model Rent {
   endDate           DateTime
   totalAmount       Float
   payments          Payment[]
+  active            Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -131,13 +137,16 @@ model Payment {
   amountPaid        Float
   paymentId         String
   accountPaidTo     String
+  comment           String
   paymentDate       DateTime
+  active            Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
 
 model Expense {
   id                Int                @id @default(autoincrement())
+  name              String
   description       String
   amount            Float
   category          String
@@ -145,6 +154,7 @@ model Expense {
   apartment         Apartment?         @relation(fields: [apartmentId], references: [id])
   buildingId        Int?
   building          Building?          @relation(fields: [buildingId], references: [id])
+  active            Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -160,6 +170,7 @@ model GuestBooking {
   bookingStatusId   Int
   bookingStatus     BookingStatus      @relation(fields: [bookingStatusId], references: [id])
   leaseTerm         String?
+  active            Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -173,6 +184,7 @@ model Utility {
   readingDate       DateTime
   meterReading      Float
   amount            Float
+  active            Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -183,6 +195,7 @@ model BuildingFeature {
   building          Building           @relation(fields: [buildingId], references: [id])
   featureId         Int
   feature           Feature            @relation(fields: [featureId], references: [id])
+  active            Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -193,6 +206,7 @@ model UnitFeature {
   apartment         Apartment          @relation(fields: [apartmentId], references: [id])
   featureId         Int
   feature           Feature            @relation(fields: [featureId], references: [id])
+  active            Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -202,6 +216,7 @@ model Feature {
   feature           String
   buildings         BuildingFeature[]
   apartments        UnitFeature[]
+  active            Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -211,6 +226,7 @@ model UnitPhoto {
   apartmentId       Int
   apartment         Apartment          @relation(fields: [apartmentId], references: [id])
   photo             String
+  active            Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -223,6 +239,7 @@ model UnitParking {
   licensePlate      String
   makeModel         String
   color             String
+  active            Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -235,6 +252,7 @@ model UnitPrice {
   fromDate          DateTime
   toDate            DateTime?
   specialPrice      Float?
+  active            Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -248,22 +266,25 @@ model Inspection {
   inspectionDate    DateTime
   inspectedBy       String
   notes             String?
+  active            Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
 
 model InspectionType {
   id                Int                @id @default(autoincrement())
-  inspectionType    String
+  type              String
   inspections       Inspection[]
+  active            Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
 
 model UtilityType {
   id                Int                @id @default(autoincrement())
-  utilityType       String
+  type              String
   utilities         Utility[]
+  active            Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -272,6 +293,7 @@ model BookingStatus {
   id                Int                @id @default(autoincrement())
   status            String
   guestBookings     GuestBooking[]
+  active            Boolean            @default(true)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }

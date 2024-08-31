@@ -1,113 +1,107 @@
 import Image from "next/image";
+import Head from 'next/head';
+import Welcome from "./welcome";
+
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
+    <div className="bg-gray-100 text-zinc-900">
+      <Head>
+        <title>Chudisoft Technologies - Estate Management System</title>
+        <meta name="description" content="Chudisoft Technologies - Estate Management System" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+
+      {/* Welcome Section */}
+      <Welcome />
+      {/* Other sections like About, Services, Features, Contact, Footer */}
+
+      {/* About Section */}
+      <section className="py-20 px-10">
+        <h2 className="text-3xl font-bold text-center mb-8">About Us</h2>
+        <p className="text-lg text-gray-700 text-center max-w-2xl mx-auto">
+          Chudisoft Technologies is a leading software firm dedicated to delivering cutting-edge software solutions. 
+          Our latest product, the Estate Management System, is designed to simplify and streamline property management for modern real estate businesses.
         </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+      </section>
+
+      {/* Services Section */}
+      <section className="bg-blue-600 py-20 px-10">
+        <h2 className="text-3xl font-bold text-center mb-8">Our Services</h2>
+        <div className="grid md:grid-cols-3 gap-10">
+          <div className="text-center p-6 bg-white shadow-md rounded-lg">
+            <div className="mb-4">
+              <svg className="w-12 h-12 text-blue-900 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8h10M7 12h4m1 8v-3a4 4 0 00-8 0v3m0-8a4 4 0 118 0m8 8v-3a4 4 0 00-8 0v3m0-8a4 4 0 118 0m8-8v16a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2h16a2 2 0 012 2z"></path></svg>
+            </div>
+            <h3 className="text-xl font-bold mb-4">Custom Software Development</h3>
+            <p className="text-gray-600">We build tailor-made software solutions to meet your specific business needs.</p>
+          </div>
+          <div className="text-center p-6 bg-white shadow-md rounded-lg">
+            <div className="mb-4">
+              <svg className="w-12 h-12 text-blue-900 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 3a4 4 0 00-4 4v4H4a2 2 0 00-2 2v4a2 2 0 002 2h16a2 2 0 002-2v-4a2 2 0 00-2-2h-3V7a4 4 0 00-4-4h-2z"></path></svg>
+            </div>
+            <h3 className="text-xl font-bold mb-4">Enterprise Solutions</h3>
+            <p className="text-gray-600">Our enterprise solutions help organizations increase efficiency and drive growth.</p>
+          </div>
+          <div className="text-center p-6 bg-white shadow-md rounded-lg">
+            <div className="mb-4">
+              <svg className="w-12 h-12 text-blue-900 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m0-4h.01M12 20h.01M4 6h16M4 10h16m-7 4h7m-4 4h4"></path></svg>
+            </div>
+            <h3 className="text-xl font-bold mb-4">Consulting Services</h3>
+            <p className="text-gray-600">We offer expert consulting services to guide your business to success.</p>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+      {/* Features Section */}
+      <section className="py-20 px-10">
+        <h2 className="text-3xl font-bold text-center mb-8">Key Features of Our Estate Management System</h2>
+        <div className="grid md:grid-cols-2 gap-10">
+          <div className="text-center p-6 bg-gray-200 shadow-md rounded-lg">
+            <h3 className="text-xl font-bold mb-4">Automated Billing & Payments</h3>
+            <p className="text-gray-600">Streamline your financial operations with our automated billing and payment system.</p>
+          </div>
+          <div className="text-center p-6 bg-gray-200 shadow-md rounded-lg">
+            <h3 className="text-xl font-bold mb-4">Tenant & Lease Management</h3>
+            <p className="text-gray-600">Efficiently manage tenant information, lease agreements, and renewals.</p>
+          </div>
+          <div className="text-center p-6 bg-gray-200 shadow-md rounded-lg">
+            <h3 className="text-xl font-bold mb-4">Property Maintenance Tracking</h3>
+            <p className="text-gray-600">Keep track of maintenance requests and ensure timely resolutions.</p>
+          </div>
+          <div className="text-center p-6 bg-gray-200 shadow-md rounded-lg">
+            <h3 className="text-xl font-bold mb-4">Comprehensive Reporting</h3>
+            <p className="text-gray-600">Generate detailed reports on your property performance and financials.</p>
+          </div>
+        </div>
+      </section>
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+      {/* Contact Section */}
+      <section className="bg-blue-600 py-20 px-10">
+        <h2 className="text-3xl font-bold text-center mb-8">Get in Touch</h2>
+        <div className="max-w-xl mx-auto">
+          <form className="bg-white p-8 shadow-md rounded-lg">
+            <div className="mb-4">
+              <label className="block text-gray-700 font-bold mb-2" htmlFor="name">Name</label>
+              <input className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900" type="text" id="name" placeholder="Your name" />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-bold mb-2" htmlFor="email">Email</label>
+              <input className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900" type="email" id="email" placeholder="Your email" />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-bold mb-2" htmlFor="message">Message</label>
+              <textarea className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900" id="message" placeholder="Your message" rows={4}></textarea>
+            </div>
+            <button className="w-full bg-blue-900 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300" type="submit">Send Message</button>
+          </form>
+        </div>
+      </section>
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      {/* Footer */}
+      <footer className="bg-blue-900 text-white text-center py-10">
+        <p className="text-lg">&copy; 2024 Chudisoft Technologies. All rights reserved.</p>
+      </footer>
+    </div>
   );
 }

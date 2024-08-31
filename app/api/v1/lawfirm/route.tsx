@@ -6,14 +6,69 @@ const prisma = new PrismaClient();
 
 /**
  * @swagger
+ * tags:
+ *   - name: LawFirms
+ *     description: LawFirm management
+ *
  * /lawfirms:
  *   get:
- *     summary: Retrieve a list of lawfirms
+ *     tags:
+ *       - LawFirms
+ *     summary: Retrieve a list of lawfirms or a specific lawfirm by ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         description: ID of the lawfirm to retrieve
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: The page number to retrieve
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *         description: Field to sort by (e.g., "name", "cost")
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *         description: Order of sorting
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Filter by name
+ *       - in: query
+ *         name: costMin
+ *         schema:
+ *           type: number
+ *         description: Minimum cost filter
  *     responses:
  *       200:
- *         description: List of lawfirms
+ *         description: LawFirm details or a list of lawfirms
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Access Denied
+ *       404:
+ *         description: LawFirm not found
  *   post:
+ *     tags:
+ *       - LawFirms
  *     summary: Create a new lawfirm
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -23,19 +78,30 @@ const prisma = new PrismaClient();
  *             properties:
  *               name:
  *                 type: string
+ *               cost:
+ *                 type: number
+ *               costBy:
+ *                 type: string
  *               address:
  *                 type: string
- *               numOfFloors:
- *                 type: integer
  *             required:
  *               - name
+ *               - cost
+ *               - costBy
  *               - address
- *               - numOfFloors
  *     responses:
  *       201:
  *         description: LawFirm created
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Access Denied
  *   put:
+ *     tags:
+ *       - LawFirms
  *     summary: Update an existing lawfirm
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -47,15 +113,25 @@ const prisma = new PrismaClient();
  *                 type: integer
  *               name:
  *                 type: string
+ *               cost:
+ *                 type: number
+ *               costBy:
+ *                 type: string
  *               address:
  *                 type: string
- *               numOfFloors:
- *                 type: integer
  *     responses:
  *       200:
  *         description: LawFirm updated
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Access Denied
  *   delete:
- *     summary: Delete a lawfirm
+ *     tags:
+ *       - LawFirms
+ *     summary: Delete an lawfirm
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: id
@@ -66,14 +142,69 @@ const prisma = new PrismaClient();
  *     responses:
  *       200:
  *         description: LawFirm deleted
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Access Denied
  */
 
 export async function GET(request: NextRequest) {
   const token = await authenticate(request);
   if (token !== null) return token;
-  
-  const lawfirms = await prisma.lawFirm.findMany();
-  return NextResponse.json(lawfirms);
+
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+
+  if (id) {
+    const lawfirm = await prisma.lawFirm.findUnique({
+      where: { id: parseInt(id) },
+    });
+    
+    if (lawfirm) {
+      return NextResponse.json(lawfirm);
+    } else {
+      return NextResponse.json({ message: 'LawFirm not found' }, { status: 404 });
+    }
+  }
+
+  // Existing code for handling lists, pagination, filtering, and sorting
+  const page = parseInt(searchParams.get('page') || '1');
+  const limit = parseInt(searchParams.get('limit') || '10');
+  const sortBy = searchParams.get('sortBy') || 'createdAt';
+  const order = searchParams.get('order') || 'asc'; // or 'desc'
+  const searchWord = searchParams.get('searchWord');
+  const fromDate = searchParams.get('fromDate') ? new Date(searchParams.get('fromDate')!) : null;
+  const toDate = searchParams.get('toDate') ? new Date(searchParams.get('toDate')!) : null;
+
+  const where = {
+    AND: [
+      searchWord ? { name: { contains: searchWord } } : {},
+      searchWord ? { address: { contains: searchWord } } : {},
+      searchWord ? { phone: { contains: searchWord } } : {},
+      searchWord ? { email: { contains: searchWord } } : {},
+      fromDate ? { createdAt: { gte: fromDate } } : {},
+      toDate ? { updatedAt: { lte: toDate } } : {},
+    ],
+  };
+
+  const lawfirms = await prisma.lawFirm.findMany({
+    where,
+    orderBy: { [sortBy]: order },
+    skip: (page - 1) * limit,
+    take: limit,
+  });
+
+  const total = await prisma.lawFirm.count({ where });
+
+  return NextResponse.json({
+    data: lawfirms,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  });
 }
 
 export async function POST(request: NextRequest) {

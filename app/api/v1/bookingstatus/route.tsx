@@ -1,22 +1,20 @@
-import { PrismaClient, User } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
+import { PrismaClient, BookingStatus } from '@prisma/client';
 import { authenticate } from '../auth/auth';
-import { hashPassword } from '@/utils/auth';
-import { error } from 'console';
 
 const prisma = new PrismaClient();
-
+const allowedRoles = ['admin', 'user'];
 /**
  * @swagger
  * tags:
- *   - name: Users
- *     description: User management
+ *   - name: BookingStatuses
+ *     description: Booking management
  *
- * /users:
+ * /bookingstatuses:
  *   get:
  *     tags:
- *       - Users
- *     summary: Retrieve a list of users or a specific user by ID
+ *       - BookingStatuses
+ *     summary: Retrieve a list of bookingstatuses or a specific booking by ID
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -24,7 +22,7 @@ const prisma = new PrismaClient();
  *         name: id
  *         schema:
  *           type: integer
- *         description: ID of the user to retrieve
+ *         description: ID of the booking to retrieve
  *       - in: query
  *         name: page
  *         schema:
@@ -58,17 +56,17 @@ const prisma = new PrismaClient();
  *         description: Minimum cost filter
  *     responses:
  *       200:
- *         description: User details or a list of users
+ *         description: Booking details or a list of bookingstatuses
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Forbidden - Access Denied
  *       404:
- *         description: User not found
+ *         description: Booking not found
  *   post:
  *     tags:
- *       - Users
- *     summary: Create a new user
+ *       - BookingStatuses
+ *     summary: Create a new booking
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -93,15 +91,15 @@ const prisma = new PrismaClient();
  *               - address
  *     responses:
  *       201:
- *         description: User created
+ *         description: Booking created
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Forbidden - Access Denied
  *   put:
  *     tags:
- *       - Users
- *     summary: Update an existing user
+ *       - BookingStatuses
+ *     summary: Update an existing booking
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -123,15 +121,15 @@ const prisma = new PrismaClient();
  *                 type: string
  *     responses:
  *       200:
- *         description: User updated
+ *         description: Booking updated
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Forbidden - Access Denied
  *   delete:
  *     tags:
- *       - Users
- *     summary: Delete an user
+ *       - BookingStatuses
+ *     summary: Delete an booking
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -140,10 +138,10 @@ const prisma = new PrismaClient();
  *         schema:
  *           type: integer
  *         required: true
- *         description: ID of the user to delete
+ *         description: ID of the booking to delete
  *     responses:
  *       200:
- *         description: User deleted
+ *         description: Booking deleted
  *       401:
  *         description: Unauthorized
  *       403:
@@ -158,14 +156,14 @@ export async function GET(request: NextRequest) {
   const id = searchParams.get('id');
 
   if (id) {
-    const user = await prisma.user.findUnique({
-      where: { id: id },
+    const bookingstatus = await prisma.bookingStatus.findUnique({
+      where: { id: parseInt(id) },
     });
     
-    if (user) {
-      return NextResponse.json(user);
+    if (bookingstatus) {
+      return NextResponse.json(bookingstatus);
     } else {
-      return NextResponse.json({ message: 'User not found' }, { status: 404 });
+      return NextResponse.json({ message: 'BookingStatus not found' }, { status: 404 });
     }
   }
 
@@ -177,31 +175,30 @@ export async function GET(request: NextRequest) {
   const searchWord = searchParams.get('searchWord');
   const fromDate = searchParams.get('fromDate') ? new Date(searchParams.get('fromDate')!) : null;
   const toDate = searchParams.get('toDate') ? new Date(searchParams.get('toDate')!) : null;
+  const costMin = parseFloat(searchParams.get('costMin') || '0');
+  const costMax = parseFloat(searchParams.get('costMax') || 'Infinity');
 
   const where = {
     AND: [
       searchWord ? { name: { contains: searchWord } } : {},
-      searchWord ? { email: { contains: searchWord } } : {},
-      searchWord ? { phone: { contains: searchWord } } : {},
-      searchWord ? { state: { contains: searchWord } } : {},
-      searchWord ? { contactAddress: { contains: searchWord } } : {},
-      searchWord ? { occupation: { contains: searchWord } } : {},
+      costMin ? { cost: { gte: costMin } } : {},
+      costMax !== Infinity ? { cost: { lte: costMax } } : {},
       fromDate ? { createdAt: { gte: fromDate } } : {},
       toDate ? { updatedAt: { lte: toDate } } : {},
     ],
   };
 
-  const users = await prisma.user.findMany({
+  const bookingstatuses = await prisma.bookingStatus.findMany({
     where,
     orderBy: { [sortBy]: order },
     skip: (page - 1) * limit,
     take: limit,
   });
 
-  const total = await prisma.user.count({ where });
+  const total = await prisma.bookingStatus.count({ where });
 
   return NextResponse.json({
-    data: users,
+    data: bookingstatuses,
     pagination: {
       total,
       page,
@@ -211,47 +208,16 @@ export async function GET(request: NextRequest) {
   });
 }
 
+
 export async function POST(request: NextRequest) {
   const token = await authenticate(request);
   if (token !== null) return token;
   
   const data = await request.json();
-
-  if (!data.email || !data.password) {
-    return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
-  }
-
-  try {
-    // Extract device information from the User-Agent header
-    const userAgent = request.headers.get('user-agent') || 'unknown'; // Get the User-Agent header
-    const deviceInfo = userAgent; // For simplicity, just using the User-Agent string as device info
-
-    // Extracting IP address and GPS from the request or data
-    const ipAddress = request.headers.get('x-forwarded-for') || ''; // Example: You might get it from headers
-    const gps = data.gps || ''; // Example: GPS data might come from the request
-
-    // Setting default values if they are not provided
-    data.role = data.role || 'user'; // Assign role
-    data.password = await hashPassword(data.password); // Hashing the password
-
-    // Creating a new user with additional fields
-    const newUser = await prisma.user.create({
-      data: {
-        ...data,
-        ipAddress,
-        gps,
-        deviceInfo,
-      }
-    });
-
-    return NextResponse.json({ user: newUser, message: 'User registered successfully' }, { status: 201 });
-
-  } catch (error) {
-    console.log(error);
-    
-    return NextResponse.json({ error: 'Error registering user' }, { status: 500 });
-  }
-
+  const newBookingStatus = await prisma.bookingStatus.create({
+    data,
+  });
+  return NextResponse.json(newBookingStatus, { status: 201 });
 }
 
 export async function PUT(request: NextRequest) {
@@ -259,11 +225,11 @@ export async function PUT(request: NextRequest) {
   if (token !== null) return token;
   
   const { id, ...data } = await request.json();
-  const updatedUser = await prisma.user.update({
+  const updatedBookingStatus = await prisma.bookingStatus.update({
     where: { id },
     data,
   });
-  return NextResponse.json(updatedUser);
+  return NextResponse.json(updatedBookingStatus);
 }
 
 export async function DELETE(request: NextRequest) {
@@ -271,9 +237,9 @@ export async function DELETE(request: NextRequest) {
   if (token !== null) return token;
   
   const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id') || '';
-  const deletedUser = await prisma.user.delete({
+  const id = parseInt(searchParams.get('id') || '');
+  const deletedBookingStatus = await prisma.bookingStatus.delete({
     where: { id },
   });
-  return NextResponse.json(deletedUser);
+  return NextResponse.json(deletedBookingStatus);
 }

@@ -4,6 +4,7 @@
 
 The Estate Management System is a web application designed for managing apartments, buildings, rents, expenses, users, and payments. It uses Next.js for the frontend, Prisma for database management, and SQLite as the database. The project includes CRUD operations for each resource, with API documentation generated using Swagger.
 
+![Landing Page](image.png)
 ## Features
 
 - **Apartments**: Manage apartment listings, including creating, updating, and deleting records.

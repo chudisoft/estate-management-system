@@ -1,85 +1,125 @@
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchBookingStatuses } from '../../store/bookingStatusSlice'; // Ensure you have this slice
+import { AppDispatch, RootState } from '../../store';
+import BookingStatusCard from './BookingStatusCard'; // Ensure you have this component
+import Pagination from '../../Pagination';
+import { saveAs } from 'file-saver';
+import { CSVLink } from 'react-csv';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { BookingStatus } from '@prisma/client';
 
-interface BookingStatusFormProps {
-  bookingStatusId?: number; // Optional ID for editing
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
 }
 
-const BookingStatusForm: React.FC<BookingStatusFormProps> = ({ bookingStatusId }) => {
-  const [status, setStatus] = useState('');
-  const [error, setError] = useState('');
-
-  const router = useRouter();
+const BookingStatusList: React.FC = () => {
+  const dispatch: AppDispatch = useDispatch();
+  const { bookingStatuses, status, error } = useSelector((state: RootState) => state.bookingStatuses);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
-    if (bookingStatusId) {
-      // Fetch booking status details for editing
-      fetch(`/api/v1/bookingStatuses/${bookingStatusId}`)
-        .then((res) => res.json())
-        .then((data) => {
-          setStatus(data.status);
-        })
-        .catch((error) => setError('Failed to load booking status details'));
-    }
-  }, [bookingStatusId]);
+    dispatch(fetchBookingStatuses());
+  }, [dispatch]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+  };
 
-    const bookingStatusData = { status };
+  const handleSort = (column: keyof typeof bookingStatuses[0]) => {
+    const order = sortOrder === 'asc' ? 'desc' : 'asc';
+    setSortOrder(order);
+    // Sort logic based on column and order
+  };
 
-    const url = bookingStatusId
-      ? `/api/v1/bookingStatuses/${bookingStatusId}`
-      : '/api/v1/bookingStatuses';
-    const method = bookingStatusId ? 'PUT' : 'POST';
+  const filteredBookingStatuses = bookingStatuses
+    .filter((status: BookingStatus) => status.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) =>
+      sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+    );
 
-    const res = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(bookingStatusData),
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentBookingStatuses = filteredBookingStatuses.slice(indexOfFirstItem, indexOfLastItem);
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.autoTable({
+      head: [['Name', 'Description']],
+      body: bookingStatuses.map((status: BookingStatus) => [status.name, status.description]),
     });
+    doc.save('booking_statuses.pdf');
+  };
 
-    if (res.ok) {
-      router.push('/bookingStatuses');
-    } else {
-      const data = await res.json();
-      setError(data.error || 'Failed to save booking status');
-    }
+  const exportToExcel = () => {
+    const csvData = bookingStatuses.map((status: BookingStatus) => ({
+      Name: status.name,
+      Description: status.description,
+    }));
+  
+    const csvRows = [
+      Object.keys(csvData[0]).join(','), // headers
+      ...csvData.map(row => Object.values(row).join(',')) // rows
+    ];
+  
+    const csvBlob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    saveAs(csvBlob, 'booking_statuses.csv');
+  };
+
+  const onEdit = (id: number) => {
+    // Handle edit logic
+  };
+
+  const onDelete = (id: number) => {
+    // Handle delete logic
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="w-full max-w-md p-8 bg-gray-100 text-gray-700 shadow-md rounded-lg">
-        <h1 className="text-2xl font-bold mb-4">
-          {bookingStatusId ? 'Edit Booking Status' : 'Add Booking Status'}
-        </h1>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="status" className="block text-gray-700">
-              Status
-            </label>
-            <input
-              type="text"
-              id="status"
-              className="mt-1 p-2 border border-gray-300 rounded w-full"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
-          >
-            {bookingStatusId ? 'Update Booking Status' : 'Add Booking Status'}
+    <div className="container mx-auto px-4">
+      <div className="flex justify-between items-center mb-4">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchTerm}
+          onChange={handleSearch}
+          className="p-2 border rounded"
+        />
+        <div className="flex space-x-2">
+          <CSVLink data={bookingStatuses} filename={'booking_statuses.csv'} className="btn btn-primary">
+            Export to CSV
+          </CSVLink>
+          <button onClick={exportToPDF} className="btn btn-primary">
+            Export to PDF
           </button>
-        </form>
+          <button onClick={exportToExcel} className="btn btn-primary">
+            Export to Excel
+          </button>
+        </div>
       </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {currentBookingStatuses.map((status: BookingStatus) => (
+          <BookingStatusCard
+            key={status.id}
+            bookingStatus={status}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        ))}
+      </div>
+      <Pagination
+        itemsPerPage={itemsPerPage}
+        totalItems={filteredBookingStatuses.length}
+        currentPage={currentPage}
+        paginate={(pageNumber: number) => setCurrentPage(pageNumber)}
+      />
     </div>
   );
 };
 
-export default BookingStatusForm;
+export default BookingStatusList;

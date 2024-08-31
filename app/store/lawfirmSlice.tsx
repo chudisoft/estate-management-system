@@ -2,7 +2,7 @@ import { LawFirm } from '@prisma/client';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-export const fetchLawFirms = createAsyncThunk('lawfirm/fetchLawFirms', async () => {
+export const fetchLawFirms = createAsyncThunk<LawFirm[]>('lawfirm/fetchLawFirms', async () => {
   const response = await axios.get('/api/v1/lawfirms');
   return response.data;
 });
